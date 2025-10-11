@@ -1,5 +1,6 @@
 # Auto-UPS-Label-Create-Via-CRM-Info
-Generated UPS label for merchant through internal CRM (Customer Relationship Management)'s Order
+Generated UPS label for merchant through internal CRM (Customer Relationship Management)
+
 This project based on UPS Shippment API python, and using catching merchant infomation using JS
 
 
