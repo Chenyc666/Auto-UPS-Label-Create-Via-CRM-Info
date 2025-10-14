@@ -148,9 +148,6 @@ headers = {
   "Authorization": "Bearer xxxxx"
 }
 
-response = requests.post(url, json=payload, headers=headers, params=query)
-
-data = response.json()
 # print(data)
 response = requests.post(url, json=payload, headers=headers, params=query)
 data = response.json()
