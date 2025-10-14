@@ -1,51 +1,43 @@
-function extractMerchantInfo() {
-  const text = document.body.innerText;
+(() => {
+  // Step 1: Find all rows (skip the header row)
+  const rows = Array.from(document.querySelectorAll('table tr')).slice(1);
 
-  function getValue(label) {
-    const regex = new RegExp(label + "\\s*:?\\s*(.+)");
-    const match = text.match(regex);
-    return match ? match[1].trim() : "";
+  // Step 2: Extract the column headers (optional, in case we need dynamic indexing)
+  const headers = Array.from(document.querySelectorAll('table th')).map(th => th.innerText.trim());
+
+  // Get column indexes based on header names
+  const merchantNumberIndex = headers.findIndex(h => /Merchant Number/i.test(h));
+  const merchantNameIndex   = headers.findIndex(h => /Merchant Name/i.test(h));
+  const lastCommentIndex    = headers.findIndex(h => /Last Comment/i.test(h));
+
+  if (merchantNumberIndex === -1 || merchantNameIndex === -1 || lastCommentIndex === -1) {
+    console.error('❌ Could not find required columns. Please verify column header text.');
+    console.log('Headers found:', headers);
+    return;
   }
 
-  const merchantName = getValue("Merchant Name");
-  const phone = getValue("Phone");
-  let address = getValue("Address");
+  // Step 3: Extract data for rows that match condition
+  const results = rows
+    .map(row => {
+      const cells = row.querySelectorAll('td');
+      return {
+        merchantNumber: cells[merchantNumberIndex]?.innerText.trim() || '',
+        merchantName: cells[merchantNameIndex]?.innerText.trim() || '',
+        lastComment: cells[lastCommentIndex]?.innerText.trim() || ''
+      };
+    })
+    .filter(row => /Please ship out/i.test(row.lastComment)); // filter only matching comments
 
-  // Normalize punctuation
-  address = address.replace(/，/g, ",");
+  // Step 4: Copy to clipboard
+  const json = JSON.stringify(results, null, 2);
+  console.log('✅ Found', results.length, 'matching records');
+  console.table(results);
 
-  // Parse address
-  const addrRegex = /(.*?)[,，]\s*([A-Za-z\s]+)[,，]\s*([A-Z]{2})\s*(\d{5}(?:-\d{4})?)/;
-  const addrMatch = address.match(addrRegex);
-
-  const addressLine = addrMatch ? addrMatch[1].trim() : "";
-  const city = addrMatch ? addrMatch[2].trim() : "";
-  const state = addrMatch ? addrMatch[3].trim() : "";
-  const postalCode = addrMatch ? addrMatch[4].trim() : "";
-
-  // Construct formatted text (with trailing comma)
-  const jsonText = `
-      "ShipTo": {
-        "Name": "${merchantName || " "}",
-        "AttentionName": " ",
-        "Phone": {
-          "Number": "${phone || " "}"
-        },
-        "Address": {
-          "AddressLine": [
-            "${addressLine || " "}"
-          ],
-          "City": "${city || " "}",
-          "StateProvinceCode": "${state || " "}",
-          "PostalCode": "${postalCode || " "}",
-          "CountryCode": "US"
-        },
-        "Residential": " "
-      },
-  `;
-
-  console.log("✅ UPS JSON snippet:\n" + jsonText);
-  return jsonText;
-}
-
-extractMerchantInfo();
+  try {
+    navigator.clipboard.writeText(json);
+    console.log('✅ JSON copied to clipboard');
+  } catch (e) {
+    console.warn('⚠️ Could not copy automatically, here is your JSON:');
+    console.log(json);
+  }
+})();
