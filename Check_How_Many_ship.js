@@ -26,8 +26,8 @@
         lastComment: cells[lastCommentIndex]?.innerText.trim() || ''
       };
     })
-    .filter(row => /Please ship out/i.test(row.lastComment)); // filter only matching comments
-
+ .filter(row => /Please\s+(ship\s+out|provide)/i.test(row.lastComment));
+ 
   // Step 4: Copy to clipboard
   const json = JSON.stringify(results, null, 2);
   console.log('✅ Found', results.length, 'matching records');
